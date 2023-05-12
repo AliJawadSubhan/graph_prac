@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:graph_store/main.dart';
+import 'package:graph_store/model/music_model.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -26,23 +27,22 @@ class Home extends StatelessWidget {
             return Text(result.exception.toString());
           }
 
+          MusicModel musicModel =
+              MusicModel.fromJson(result.data as Map<String, dynamic>);
+
+          if (musicModel == null) {
+            return Text('Loading bruv');
+          }
           if (result.isLoading) {
             return const Text('Loading');
           }
 
-          final List productList = result.data?['products']['edges'];
-
-          if (productList == null) {
-            return const Text('No found');
-          }
-          if (kDebugMode) {
-            print(productList);
-          }
           return ListView.builder(
-            itemCount: productList.length,
+            itemCount: musicModel.data!.products?.edges?.length,
             itemBuilder: (context, index) {
-              DateTime parseDataOfDate =
-                  DateTime.parse(productList[index]['node']['created']);
+              var products = musicModel.data?.products?.edges!;
+              DateTime parseDataOfDate = DateTime.parse(
+                  products![index].node?.created.toString() ?? '');
               String formattedDate =
                   DateFormat('MMM yyyy').format(parseDataOfDate);
 
@@ -57,7 +57,7 @@ class Home extends StatelessWidget {
                         color: Colors.grey.withOpacity(0.5),
                         spreadRadius: 2,
                         blurRadius: 5,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -67,7 +67,7 @@ class Home extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          productList[index]['node']['thumbnail']['url'],
+                          products[index].node?.thumbnail?.url.toString() ?? '',
                           height: 200,
                           fit: BoxFit.fill,
                         ),
@@ -76,7 +76,7 @@ class Home extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          productList[index]['node']['name'],
+                          products[index].node?.name ?? '',
                           textAlign: TextAlign.start,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
